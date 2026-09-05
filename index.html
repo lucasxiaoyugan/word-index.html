@@ -308,6 +308,47 @@
       gap: 12px;
     }
 
+    .password-field {
+      position: relative;
+    }
+
+    .password-field input {
+      padding-right: 52px;
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 40px;
+      height: 40px;
+      min-height: 40px;
+      padding: 0;
+      border-radius: 12px;
+      border-color: transparent;
+      background: transparent;
+      color: var(--muted);
+      display: grid;
+      place-items: center;
+    }
+
+    .password-toggle:hover {
+      background: rgba(88, 122, 113, 0.08);
+      color: var(--text);
+      transform: translateY(-50%) scale(1.02);
+    }
+
+    .password-toggle svg {
+      width: 19px;
+      height: 19px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
     .auth-title {
       margin: 0 0 14px;
       font-size: 23px;
@@ -907,6 +948,7 @@
       view: 'auth',
       authMode: 'login',
       authMessage: '',
+      showPassword: false,
       pageMessage: '',
       pageMessageType: 'info',
       search: '',
@@ -1021,6 +1063,11 @@
       state.authMessage = message;
     }
 
+    function togglePasswordVisibility() {
+      state.showPassword = !state.showPassword;
+      render();
+    }
+
     function trimValue(value) {
       return value.trim();
     }
@@ -1083,12 +1130,8 @@
       }
 
       const user = state.data.users.find(item => item.username === name);
-      if (!user) {
-        setAuthMessage('用户名不存在。');
-        return;
-      }
-      if (user.password !== pass) {
-        setAuthMessage('密码错误。');
+      if (!user || user.password !== pass) {
+        setAuthMessage('账号或密码错误。');
         return;
       }
 
@@ -1276,7 +1319,16 @@
             <h1 class="auth-title">${isLogin ? '登录' : '注册'}</h1>
             <form id="auth-form" class="stack" autocomplete="on">
               <input id="username-input" name="username" autocomplete="username" maxlength="64" placeholder="用户名" required>
-              <input id="password-input" name="password" type="password" ${isLogin ? 'autocomplete="current-password"' : 'autocomplete="new-password"'} maxlength="128" placeholder="密码" required>
+              <div class="password-field">
+                <input id="password-input" name="password" type="${state.showPassword ? 'text' : 'password'}" ${isLogin ? 'autocomplete="current-password"' : 'autocomplete="new-password"'} maxlength="128" placeholder="密码" required>
+                <button class="password-toggle" id="password-toggle-btn" type="button" aria-label="${state.showPassword ? '隐藏密码' : '显示密码'}" aria-pressed="${state.showPassword ? 'true' : 'false'}">
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"></path>
+                    <circle cx="12" cy="12" r="3.2"></circle>
+                    ${state.showPassword ? '<path d="M4 20 20 4"></path>' : ''}
+                  </svg>
+                </button>
+              </div>
               <button class="primary-btn" type="submit">${isLogin ? '登录' : '注册并登录'}</button>
               <div class="message">${escapeHtml(state.authMessage || '')}</div>
             </form>
@@ -1497,6 +1549,7 @@
         const form = document.getElementById('auth-form');
         const usernameInput = document.getElementById('username-input');
         const passwordInput = document.getElementById('password-input');
+        const passwordToggleBtn = document.getElementById('password-toggle-btn');
         if (form && usernameInput && passwordInput) {
           form.addEventListener('submit', event => {
             event.preventDefault();
@@ -1507,6 +1560,9 @@
             }
           });
           usernameInput.focus();
+        }
+        if (passwordToggleBtn) {
+          passwordToggleBtn.addEventListener('click', togglePasswordVisibility);
         }
         return;
       }
