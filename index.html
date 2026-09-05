@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <title>单词记忆</title>
+  <style>
+    :root {
+      --bg: #e9f2e9;
+      --panel: #fbfdfb;
+      --panel-2: #f4f8f4;
+      --line: #cddbcc;
+      --text: #243024;
+      --muted: #627062;
+      --accent: #5d7f62;
+      --accent-strong: #4e6d53;
+      --danger: #a04e4e;
+      --shadow: 0 14px 34px rgba(44, 64, 44, 0.08);
+      --shadow-soft: 0 8px 22px rgba(44, 64, 44, 0.06);
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: "SF Pro Text", "SF Pro Display", "PingFang SC",
+        "Hiragino Sans GB", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+      background:
+        linear-gradient(180deg, #f8faf8 0%, #eef5ef 44%, #e9f2eb 100%);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    button, input {
+      font: inherit;
+    }
+
+    button {
+      min-height: 44px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: inherit;
+      padding: 0 14px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: transform 0.16s ease, background-color 0.16s ease, border-color 0.16s ease, opacity 0.16s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); opacity: 0.9; }
+    button:focus-visible,
+    input:focus-visible {
+      outline: 2px solid rgba(93, 127, 98, 0.32);
+      outline-offset: 2px;
+    }
+
+    input {
+      min-height: 44px;
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.82);
+      color: var(--text);
+      padding: 0 14px;
+      outline: none;
+      transition: border-color 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
+    }
+
+    input:focus {
+      border-color: rgba(95, 129, 99, 0.7);
+      box-shadow: 0 0 0 4px rgba(95, 129, 99, 0.12);
+      background: #fff;
+    }
+
+    #app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #app::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.60), rgba(255, 255, 255, 0) 54%),
+        linear-gradient(315deg, rgba(94, 126, 97, 0.07), rgba(94, 126, 97, 0) 60%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0));
+      opacity: 1;
+    }
+
+    .page {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 34px 24px 28px;
+      gap: 26px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 48px;
+      padding: 4px 2px 0;
+    }
+
+    .topbar-left,
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .topbar-right {
+      justify-content: flex-end;
+      margin-left: auto;
+    }
+
+    .user-pill,
+    .count-pill {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 12px;
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.6);
+      border: 1px solid rgba(111, 132, 111, 0.22);
+      color: var(--muted);
+      white-space: nowrap;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .ghost-btn {
+      border-color: var(--line);
+      background: rgba(255, 255, 255, 0.55);
+    }
+
+    .ghost-btn:hover { background: rgba(255, 255, 255, 0.82); }
+
+    .primary-btn {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .primary-btn:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
+
+    .danger-btn {
+      background: rgba(159, 77, 77, 0.1);
+      color: var(--danger);
+      border-color: rgba(159, 77, 77, 0.2);
+    }
+
+    .auth-wrap {
+      flex: 1;
+      display: grid;
+      place-items: center;
+      padding: 44px 18px;
+    }
+
+    .auth-panel {
+      width: min(100%, 440px);
+      border-radius: 20px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.70), rgba(250, 253, 250, 0.40)),
+        rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.36);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.58),
+        0 24px 60px rgba(57, 79, 57, 0.10);
+      backdrop-filter: blur(20px) saturate(1.18);
+      -webkit-backdrop-filter: blur(20px) saturate(1.18);
+      padding: 26px;
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .segmented button {
+      background: rgba(95, 129, 99, 0.08);
+      border-color: rgba(95, 129, 99, 0.12);
+      color: var(--muted);
+    }
+
+    .segmented button.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .auth-title {
+      margin: 0 0 14px;
+      font-size: 22px;
+      font-weight: 650;
+      letter-spacing: 0;
+    }
+
+    .message {
+      min-height: 20px;
+      color: var(--danger);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .main-home {
+      flex: 1;
+      display: grid;
+      place-items: center;
+      padding: 6px 0 30px;
+    }
+
+    .home-grid {
+      width: min(100%, 560px);
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+    }
+
+    .feature-card {
+      min-height: 180px;
+      border-radius: 18px;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.28)),
+        linear-gradient(180deg, rgba(96, 129, 102, 0.12), rgba(96, 129, 102, 0.04));
+      border: 1px solid rgba(255, 255, 255, 0.34);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.56),
+        0 20px 48px rgba(57, 79, 57, 0.10);
+      backdrop-filter: blur(18px) saturate(1.14);
+      -webkit-backdrop-filter: blur(18px) saturate(1.14);
+      display: grid;
+      place-items: center;
+      font-size: 28px;
+      font-weight: 650;
+      letter-spacing: 0;
+    }
+
+    .feature-card:hover {
+      background: #fff;
+      border-color: rgba(95, 129, 99, 0.28);
+    }
+
+    .section-shell {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      min-height: 0;
+    }
+
+    .card-shell {
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.66), rgba(251, 253, 251, 0.42)),
+        rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.32);
+      border-radius: 18px;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.58),
+        0 16px 40px rgba(57, 79, 57, 0.08);
+      backdrop-filter: blur(18px) saturate(1.14);
+      -webkit-backdrop-filter: blur(18px) saturate(1.14);
+      padding: 20px;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .input-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+    }
+
+    .hint {
+      min-height: 18px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .search-row {
+      display: grid;
+      gap: 8px;
+    }
+
+    .list-shell {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.42)),
+        rgba(255, 255, 255, 0.56);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        0 16px 40px rgba(57, 79, 57, 0.08);
+      backdrop-filter: blur(16px) saturate(1.12);
+      -webkit-backdrop-filter: blur(16px) saturate(1.12);
+    }
+
+    .word-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .word-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 15px 18px;
+      border-bottom: 1px solid rgba(111, 132, 111, 0.12);
+      transition: background-color 0.16s ease, transform 0.16s ease;
+    }
+
+    .word-row:hover {
+      background: rgba(93, 127, 98, 0.05);
+    }
+
+    .word-row:last-child {
+      border-bottom: 0;
+    }
+
+    .word-text {
+      min-width: 0;
+      word-break: break-word;
+      line-height: 1.5;
+    }
+
+    .empty-state {
+      padding: 36px 16px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .footer-bar {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .footer-action {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      padding: 0;
+      min-height: 0;
+      font-size: 13px;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .footer-action:hover {
+      color: var(--text);
+      transform: none;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: rgba(31, 42, 31, 0.24);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .modal-card {
+      width: min(100%, 420px);
+      border-radius: 20px;
+      padding: 24px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.80), rgba(250, 253, 250, 0.62)),
+        rgba(255, 255, 255, 0.76);
+      border: 1px solid rgba(255, 255, 255, 0.42);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.6),
+        0 26px 64px rgba(30, 42, 30, 0.22);
+      backdrop-filter: blur(20px) saturate(1.16);
+      -webkit-backdrop-filter: blur(20px) saturate(1.16);
+    }
+
+    .modal-title {
+      margin: 0 0 10px;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .modal-text {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .review-shell {
+      flex: 1;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      padding-bottom: 14px;
+    }
+
+    .review-stage {
+      flex: 1;
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 0;
+      touch-action: none;
+      overflow: hidden;
+      border-radius: 20px;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.26)),
+        linear-gradient(180deg, rgba(246, 250, 246, 0.82), rgba(235, 243, 237, 0.70));
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.56),
+        0 22px 54px rgba(57, 79, 57, 0.10);
+      backdrop-filter: blur(20px) saturate(1.14);
+      -webkit-backdrop-filter: blur(20px) saturate(1.14);
+    }
+
+    .review-content {
+      width: min(100%, 860px);
+      display: grid;
+      place-items: center;
+      gap: 14px;
+      padding: 96px 72px;
+      border-radius: 20px;
+      transition: transform 0.18s ease, opacity 0.18s ease;
+      will-change: transform, opacity;
+      text-align: center;
+    }
+
+    .review-word {
+      font-size: clamp(48px, 11vw, 104px);
+      font-weight: 700;
+      letter-spacing: 0;
+      line-height: 1.05;
+      text-align: center;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+      animation: pop 220ms ease;
+    }
+
+    .review-content[data-motion="next"] .review-word {
+      animation: slide-next 220ms ease;
+    }
+
+    .review-content[data-motion="prev"] .review-word {
+      animation: slide-prev 220ms ease;
+    }
+
+    .review-empty {
+      font-size: 20px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .review-footnote {
+      padding-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      letter-spacing: 0;
+    }
+
+    .review-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 54px;
+      height: 54px;
+      padding: 0;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.36);
+      border: 1px solid rgba(255, 255, 255, 0.30);
+      color: var(--accent-strong);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        0 12px 28px rgba(57, 79, 57, 0.10);
+      backdrop-filter: blur(16px) saturate(1.12);
+      -webkit-backdrop-filter: blur(16px) saturate(1.12);
+      display: grid;
+      place-items: center;
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .review-nav.left { left: 12px; }
+    .review-nav.right { right: 12px; }
+
+    .review-nav:disabled {
+      opacity: 0.3;
+      cursor: default;
+      transform: translateY(-50%);
+    }
+
+    .review-nav:disabled:hover {
+      transform: translateY(-50%);
+    }
+
+    @keyframes pop {
+      from { opacity: 0; transform: translateY(8px) scale(0.985); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes slide-next {
+      from { opacity: 0; transform: translateX(14px) scale(0.985); }
+      to { opacity: 1; transform: translateX(0) scale(1); }
+    }
+
+    @keyframes slide-prev {
+      from { opacity: 0; transform: translateX(-14px) scale(0.985); }
+      to { opacity: 1; transform: translateX(0) scale(1); }
+    }
+
+    .soft-note {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+      margin: 0;
+    }
+
+    @media (max-width: 760px) {
+      .page {
+        padding: 16px 14px 18px;
+        gap: 14px;
+      }
+
+      .home-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .feature-card {
+        min-height: 170px;
+        font-size: 24px;
+      }
+
+      .input-row {
+        grid-template-columns: 1fr;
+      }
+
+      .review-content {
+        padding: 72px 20px;
+      }
+
+      .review-nav {
+        width: 50px;
+        height: 50px;
+        font-size: 26px;
+      }
+
+      .card-shell,
+      .auth-panel,
+      .review-stage {
+        backdrop-filter: blur(16px) saturate(1.08);
+        -webkit-backdrop-filter: blur(16px) saturate(1.08);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script>
+    const STORAGE_KEY = 'word-memory-lite-v1';
+    const app = document.getElementById('app');
+
+    const state = {
+      data: { users: [], currentUser: null },
+      view: 'auth',
+      authMode: 'login',
+      authMessage: '',
+      pageMessage: '',
+      pageMessageType: 'info',
+      search: '',
+      reviewSession: null,
+      showClearModal: false
+    };
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && Array.isArray(parsed.users)) {
+            state.data.users = parsed.users.filter(user => user && typeof user.username === 'string' && typeof user.password === 'string' && Array.isArray(user.words));
+            state.data.currentUser = typeof parsed.currentUser === 'string' ? parsed.currentUser : null;
+          }
+        }
+      } catch (error) {
+        state.data = { users: [], currentUser: null };
+      }
+
+      if (state.data.currentUser && !getCurrentUser()) {
+        state.data.currentUser = null;
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data));
+      } catch (error) {
+        console.warn('save failed', error);
+      }
+    }
+
+    function getCurrentUser() {
+      return state.data.users.find(user => user.username === state.data.currentUser) || null;
+    }
+
+    function currentWords() {
+      const user = getCurrentUser();
+      return user ? user.words : [];
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function setMessage(message, type = 'info') {
+      state.pageMessage = message;
+      state.pageMessageType = type;
+    }
+
+    function setAuthMessage(message) {
+      state.authMessage = message;
+    }
+
+    function trimValue(value) {
+      return value.trim();
+    }
+
+    function goTo(view) {
+      state.view = view;
+      if (view === 'review') {
+        startReviewSession();
+      } else {
+        state.reviewSession = null;
+      }
+      render();
+    }
+
+    function logout() {
+      state.data.currentUser = null;
+      state.reviewSession = null;
+      state.showClearModal = false;
+      state.view = 'auth';
+      state.authMode = 'login';
+      state.authMessage = '';
+      state.pageMessage = '';
+      saveState();
+      render();
+    }
+
+    function register(username, password) {
+      const name = trimValue(username);
+      const pass = trimValue(password);
+
+      if (!name) {
+        setAuthMessage('用户名不能为空。');
+        return;
+      }
+      if (!pass) {
+        setAuthMessage('密码不能为空。');
+        return;
+      }
+      if (state.data.users.some(user => user.username === name)) {
+        setAuthMessage('用户名已存在。');
+        return;
+      }
+
+      state.data.users.push({ username: name, password: pass, words: [] });
+      state.data.currentUser = name;
+      state.view = 'home';
+      state.authMessage = '';
+      state.pageMessage = '';
+      saveState();
+      render();
+    }
+
+    function login(username, password) {
+      const name = trimValue(username);
+      const pass = trimValue(password);
+
+      if (!name || !pass) {
+        setAuthMessage('用户名和密码都要填好哦~');
+        return;
+      }
+
+      const user = state.data.users.find(item => item.username === name);
+      if (!user) {
+        setAuthMessage('用户名不存在。');
+        return;
+      }
+      if (user.password !== pass) {
+        setAuthMessage('密码错误。');
+        return;
+      }
+
+      state.data.currentUser = name;
+      state.view = 'home';
+      state.authMessage = '';
+      state.pageMessage = '';
+      saveState();
+      render();
+    }
+
+    function addWord(word) {
+      const value = trimValue(word);
+      if (!value) {
+        setMessage('先输入一个单词再加进去哦~', 'error');
+        render();
+        return;
+      }
+
+      const user = getCurrentUser();
+      if (!user) return;
+      if (user.words.includes(value)) {
+        setMessage('这个单词已经在词库里啦~', 'info');
+        render();
+        return;
+      }
+
+      user.words.push(value);
+      state.reviewSession = null;
+      state.pageMessage = '添加成功啦~';
+      state.pageMessageType = 'info';
+      saveState();
+      render();
+    }
+
+    function deleteWord(index) {
+      const user = getCurrentUser();
+      if (!user) return;
+      user.words.splice(index, 1);
+      setMessage('已经删掉啦~', 'info');
+      saveState();
+      render();
+    }
+
+    function clearWords() {
+      const user = getCurrentUser();
+      if (!user) return;
+      user.words = [];
+      state.reviewSession = null;
+      state.showClearModal = false;
+      setMessage('词库已经清空啦~', 'info');
+      saveState();
+      render();
+    }
+
+    function openClearModal() {
+      state.showClearModal = true;
+      render();
+    }
+
+    function closeClearModal() {
+      state.showClearModal = false;
+      render();
+    }
+
+    function startReviewSession() {
+      const words = currentWords();
+      if (!words.length) {
+        state.reviewSession = { history: [], index: -1, motion: '' };
+        return;
+      }
+      const first = words[Math.floor(Math.random() * words.length)];
+      state.reviewSession = { history: [first], index: 0, motion: '' };
+    }
+
+    function currentReviewWord() {
+      const session = state.reviewSession;
+      if (!session || session.index < 0) return '';
+      return session.history[session.index] || '';
+    }
+
+    function nextReviewWord() {
+      const words = currentWords();
+      if (!words.length) return;
+      if (!state.reviewSession) startReviewSession();
+      const session = state.reviewSession;
+      session.motion = 'next';
+      if (session.index < session.history.length - 1) {
+        session.history = session.history.slice(0, session.index + 1);
+      }
+      const next = words[Math.floor(Math.random() * words.length)];
+      session.history.push(next);
+      session.index = session.history.length - 1;
+      render();
+    }
+
+    function prevReviewWord() {
+      if (!state.reviewSession || state.reviewSession.index <= 0) return;
+      state.reviewSession.motion = 'prev';
+      state.reviewSession.index -= 1;
+      render();
+    }
+
+    function renderAuth() {
+      const isLogin = state.authMode === 'login';
+      return `
+        <div class="auth-wrap">
+          <section class="auth-panel" aria-label="账号入口">
+            <div class="segmented" role="tablist" aria-label="登录注册切换">
+              <button class="${isLogin ? 'active' : ''}" data-auth-mode="login" type="button">登录</button>
+              <button class="${!isLogin ? 'active' : ''}" data-auth-mode="register" type="button">注册</button>
+            </div>
+            <h1 class="auth-title">${isLogin ? '登录' : '注册'}</h1>
+            <form id="auth-form" class="stack" autocomplete="on">
+              <input id="username-input" name="username" autocomplete="username" maxlength="64" placeholder="用户名" required>
+              <input id="password-input" name="password" type="password" ${isLogin ? 'autocomplete="current-password"' : 'autocomplete="new-password"'} maxlength="128" placeholder="密码" required>
+              <button class="primary-btn" type="submit">${isLogin ? '登录' : '注册并登录'}</button>
+              <div class="message">${escapeHtml(state.authMessage || '')}</div>
+            </form>
+          </section>
+        </div>
+      `;
+    }
+
+    function renderHome() {
+      const user = getCurrentUser();
+      const username = user ? user.username : '';
+      return `
+        <div class="page">
+          <header class="topbar">
+            <div class="topbar-left"></div>
+            <div class="topbar-right">
+              <div class="user-pill">当前用户：${escapeHtml(username)}</div>
+              <button class="ghost-btn" id="logout-btn" type="button">退出登录</button>
+            </div>
+          </header>
+          <main class="main-home">
+            <div class="home-grid" aria-label="功能入口">
+              <button class="feature-card" data-go="library" type="button">词库</button>
+              <button class="feature-card" data-go="review" type="button">复现</button>
+            </div>
+          </main>
+        </div>
+      `;
+    }
+
+    function renderLibrary() {
+      const words = currentWords();
+
+      return `
+        <div class="page">
+          <header class="topbar">
+            <div class="topbar-left">
+              <button class="ghost-btn" data-go="home" type="button">← 返回主页</button>
+            </div>
+            <div class="topbar-right">
+              <div class="count-pill">词库总数：${words.length}</div>
+              <button class="ghost-btn" id="logout-btn" type="button">退出登录</button>
+            </div>
+          </header>
+
+          <section class="section-shell">
+            <div class="card-shell">
+              <form id="add-form" class="form-grid">
+                <div class="input-row">
+                  <input id="word-input" maxlength="120" placeholder="输入单词">
+                  <button class="primary-btn" type="submit">添加</button>
+                </div>
+                <div class="${state.pageMessageType === 'error' ? 'message' : 'hint'}">${escapeHtml(state.pageMessage || '')}</div>
+              </form>
+            </div>
+
+            <div class="card-shell">
+              <div class="search-row">
+                <input id="search-input" value="${escapeHtml(state.search)}" placeholder="搜索单词">
+                <div class="hint">支持模糊搜索哦~ 不区分大小写。</div>
+              </div>
+            </div>
+
+            <div class="list-shell" id="word-list-shell">
+              ${renderLibraryList(words)}
+            </div>
+
+            <div class="footer-bar">
+              <button class="footer-action" id="clear-btn" type="button">清空词库</button>
+            </div>
+          </section>
+        </div>
+      `;
+    }
+
+    function renderLibraryList(words) {
+      const query = state.search.trim().toLowerCase();
+      const filtered = words
+        .map((word, index) => ({ word, index }))
+        .filter(item => item.word.toLowerCase().includes(query));
+
+      const emptyText = words.length === 0
+        ? '词库空空的，先放几个单词进去吧~'
+        : '没有找到符合的单词哦~';
+
+      return filtered.length
+        ? `<ul class="word-list">${filtered.map(item => `
+            <li class="word-row">
+              <div class="word-text">${escapeHtml(item.word)}</div>
+              <button class="ghost-btn" type="button" data-delete-index="${item.index}">删除</button>
+            </li>
+          `).join('')}</ul>`
+        : `<div class="empty-state">${escapeHtml(emptyText)}</div>`;
+    }
+
+    function updateLibraryList() {
+      const shell = document.getElementById('word-list-shell');
+      if (!shell) return;
+      shell.innerHTML = renderLibraryList(currentWords());
+      shell.querySelectorAll('[data-delete-index]').forEach(button => {
+        button.addEventListener('click', () => {
+          deleteWord(Number(button.dataset.deleteIndex));
+        });
+      });
+    }
+
+    function renderReview() {
+      const words = currentWords();
+      const word = currentReviewWord();
+      const hasWords = words.length > 0;
+      const reviewMarkup = hasWords
+        ? `
+          <button class="review-nav left" id="prev-word-btn" type="button" ${state.reviewSession && state.reviewSession.index <= 0 ? 'disabled' : ''} aria-label="上一个">‹</button>
+          <div class="review-content" id="review-content" data-motion="${escapeHtml(state.reviewSession?.motion || '')}">
+            <div class="review-word">${escapeHtml(word)}</div>
+          </div>
+          <button class="review-nav right" id="next-word-btn" type="button" aria-label="下一个">›</button>
+        `
+        : `
+          <div class="review-content" id="review-content">
+            <div class="review-empty">请先添加单词</div>
+          </div>
+        `;
+
+      return `
+        <div class="page">
+          <header class="topbar">
+            <div class="topbar-left">
+              <button class="ghost-btn" data-go="home" type="button">← 返回主页</button>
+            </div>
+            <div class="topbar-right">
+              <div class="count-pill">总数：${words.length}</div>
+              <button class="ghost-btn" id="logout-btn" type="button">退出登录</button>
+            </div>
+          </header>
+
+          <section class="review-shell">
+            <div class="review-stage" id="review-stage">
+              ${reviewMarkup}
+            </div>
+            <div class="review-footnote">当前词库共有 ${words.length} 个单词哦~</div>
+          </section>
+        </div>
+      `;
+    }
+
+    function render() {
+      if (!state.data.currentUser) {
+        state.view = 'auth';
+      }
+
+      app.innerHTML = state.view === 'auth'
+        ? renderAuth()
+        : state.view === 'home'
+          ? renderHome()
+          : state.view === 'library'
+            ? renderLibrary()
+            : renderReview();
+
+      if (state.showClearModal) {
+        app.innerHTML += `
+          <div class="modal-backdrop" id="clear-modal-backdrop">
+            <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="clear-modal-title">
+              <h2 class="modal-title" id="clear-modal-title">清空词库？</h2>
+              <p class="modal-text">这会删除当前账号里的所有单词，操作后不能恢复哦~</p>
+              <div class="modal-actions">
+                <button class="ghost-btn" id="clear-cancel-btn" type="button">取消</button>
+                <button class="danger-btn" id="clear-confirm-btn" type="button">确认清空</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      bindInteractions();
+    }
+
+    function bindInteractions() {
+      app.querySelectorAll('[data-go]').forEach(button => {
+        button.addEventListener('click', () => {
+          const target = button.dataset.go;
+          if (target === 'review' && !currentWords().length) {
+            state.search = '';
+            state.pageMessage = '';
+            goTo('review');
+            return;
+          }
+          if (target === 'review' || target === 'library' || target === 'home') {
+            state.search = '';
+            state.pageMessage = '';
+            goTo(target);
+          }
+        });
+      });
+
+      const logoutBtn = document.getElementById('logout-btn');
+      if (logoutBtn) logoutBtn.addEventListener('click', logout);
+
+      if (state.view === 'auth') {
+        document.querySelectorAll('[data-auth-mode]').forEach(button => {
+          button.addEventListener('click', () => {
+            state.authMode = button.dataset.authMode;
+            state.authMessage = '';
+            render();
+          });
+        });
+
+        const form = document.getElementById('auth-form');
+        const usernameInput = document.getElementById('username-input');
+        const passwordInput = document.getElementById('password-input');
+        if (form && usernameInput && passwordInput) {
+          form.addEventListener('submit', event => {
+            event.preventDefault();
+            if (state.authMode === 'login') {
+              login(usernameInput.value, passwordInput.value);
+            } else {
+              register(usernameInput.value, passwordInput.value);
+            }
+          });
+          usernameInput.focus();
+        }
+        return;
+      }
+
+      if (state.view === 'library') {
+        const addForm = document.getElementById('add-form');
+        const wordInput = document.getElementById('word-input');
+        const searchInput = document.getElementById('search-input');
+        const listShell = document.getElementById('word-list-shell');
+        const clearBtn = document.getElementById('clear-btn');
+        const clearCancelBtn = document.getElementById('clear-cancel-btn');
+        const clearConfirmBtn = document.getElementById('clear-confirm-btn');
+        const clearBackdrop = document.getElementById('clear-modal-backdrop');
+
+        if (state.search && searchInput) {
+          searchInput.focus();
+        } else if (wordInput) {
+          wordInput.focus();
+        }
+
+        if (addForm && wordInput) {
+          addForm.addEventListener('submit', event => {
+            event.preventDefault();
+            addWord(wordInput.value);
+          });
+        }
+
+        if (searchInput) {
+          searchInput.addEventListener('input', event => {
+            state.search = event.target.value;
+            updateLibraryList();
+          });
+        }
+
+        if (listShell) {
+          listShell.querySelectorAll('[data-delete-index]').forEach(button => {
+            button.addEventListener('click', () => {
+              deleteWord(Number(button.dataset.deleteIndex));
+            });
+          });
+        }
+
+        if (clearBtn) clearBtn.addEventListener('click', openClearModal);
+        if (clearCancelBtn) clearCancelBtn.addEventListener('click', closeClearModal);
+        if (clearConfirmBtn) clearConfirmBtn.addEventListener('click', clearWords);
+        if (clearBackdrop) {
+          clearBackdrop.addEventListener('click', event => {
+            if (event.target === clearBackdrop) closeClearModal();
+          });
+        }
+        return;
+      }
+
+      if (state.view === 'review') {
+        const stage = document.getElementById('review-stage');
+        const prevBtn = document.getElementById('prev-word-btn');
+        const nextBtn = document.getElementById('next-word-btn');
+        const content = document.getElementById('review-content');
+
+        if (prevBtn) prevBtn.addEventListener('click', prevReviewWord);
+        if (nextBtn) nextBtn.addEventListener('click', nextReviewWord);
+
+        if (stage && content && currentWords().length) {
+          let startX = 0;
+          let startY = 0;
+          let lastDx = 0;
+          let lastDy = 0;
+          let dragging = false;
+
+          const resetTransform = () => {
+            content.style.transition = 'transform 0.18s ease, opacity 0.18s ease';
+            content.style.transform = 'translateX(0px)';
+            content.style.opacity = '1';
+          };
+
+          const onTouchStart = event => {
+            const touch = event.touches[0];
+            startX = touch.clientX;
+            startY = touch.clientY;
+            lastDx = 0;
+            lastDy = 0;
+            dragging = true;
+            content.style.transition = 'none';
+          };
+
+          const onTouchMove = event => {
+            if (!dragging) return;
+            const touch = event.touches[0];
+            lastDx = touch.clientX - startX;
+            lastDy = touch.clientY - startY;
+            if (Math.abs(lastDx) <= Math.abs(lastDy)) return;
+            event.preventDefault();
+            const offset = lastDx * 0.35;
+            content.style.transform = `translateX(${offset}px)`;
+            content.style.opacity = String(Math.max(0.5, 1 - Math.min(Math.abs(offset) / 260, 0.45)));
+          };
+
+          const onTouchEnd = () => {
+            if (!dragging) return;
+            dragging = false;
+            if (Math.abs(lastDx) > 60 && Math.abs(lastDx) > Math.abs(lastDy)) {
+              if (lastDx > 0) {
+                nextReviewWord();
+              } else {
+                prevReviewWord();
+              }
+              return;
+            }
+            resetTransform();
+          };
+
+          stage.addEventListener('touchstart', onTouchStart, { passive: true });
+          stage.addEventListener('touchmove', onTouchMove, { passive: false });
+          stage.addEventListener('touchend', onTouchEnd);
+          stage.addEventListener('touchcancel', resetTransform);
+          resetTransform();
+        }
+      }
+    }
+
+    document.addEventListener('keydown', event => {
+      if (state.showClearModal && event.key === 'Escape') {
+        closeClearModal();
+        return;
+      }
+      if (state.view !== 'review') return;
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        prevReviewWord();
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        nextReviewWord();
+      }
+    });
+
+    loadState();
+    state.view = state.data.currentUser ? 'home' : 'auth';
+    if (state.data.currentUser) {
+      state.authMode = 'login';
+    }
+    render();
+  </script>
+</body>
+</html>
