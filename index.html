@@ -367,38 +367,37 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 22px;
-      padding: 4px 0 34px;
+      gap: 18px;
+      padding: 4px 0 30px;
     }
 
     .home-grid {
-      width: min(100%, 620px);
+      width: 100%;
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 22px;
       align-self: center;
     }
 
-    .library-entry {
-      width: min(100%, 620px);
-      min-height: 88px;
+    .home-review-entry {
+      width: 100%;
+      min-height: 164px;
       border-radius: 24px;
       background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.68), rgba(255, 255, 255, 0.42)),
-        linear-gradient(135deg, rgba(88, 122, 113, 0.08), rgba(255, 255, 255, 0) 48%),
-        rgba(255, 255, 255, 0.56);
-      border: 1px solid rgba(255, 255, 255, 0.36);
+        linear-gradient(180deg, rgba(255, 255, 255, 0.74), rgba(255, 255, 255, 0.46)),
+        linear-gradient(135deg, rgba(74, 104, 142, 0.14), rgba(255, 255, 255, 0) 48%),
+        linear-gradient(320deg, rgba(201, 190, 164, 0.12), rgba(255, 255, 255, 0) 44%);
+      border: 1px solid rgba(255, 255, 255, 0.4);
       box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.6),
-        0 20px 46px rgba(57, 79, 57, 0.1);
-      backdrop-filter: blur(16px) saturate(1.08);
-      -webkit-backdrop-filter: blur(16px) saturate(1.08);
+        0 22px 50px rgba(57, 79, 57, 0.11);
+      backdrop-filter: blur(18px) saturate(1.1);
+      -webkit-backdrop-filter: blur(18px) saturate(1.1);
       display: grid;
       place-items: center;
-      font-size: 24px;
+      font-size: 26px;
       font-weight: 650;
       letter-spacing: -0.02em;
-      align-self: center;
     }
 
     .pager-bar {
@@ -806,6 +805,8 @@
       gap: 14px;
       padding: 100px 72px;
       border-radius: 20px;
+      position: relative;
+      z-index: 1;
       transition:
         transform 220ms var(--ease-out),
         opacity 220ms var(--ease-out),
@@ -850,6 +851,7 @@
     .review-nav {
       position: absolute;
       top: 50%;
+      z-index: 2;
       transform: translateY(-50%);
       width: 54px;
       height: 54px;
@@ -948,13 +950,14 @@
         gap: 14px;
       }
 
-      .home-grid {
-        grid-template-columns: 1fr;
+    .home-grid {
+        gap: 12px;
       }
 
-      .feature-card {
-        min-height: 174px;
-        font-size: 24px;
+      .feature-card,
+      .home-review-entry {
+        min-height: 160px;
+        font-size: 22px;
       }
 
       .input-row {
@@ -1489,9 +1492,9 @@
           <main class="main-home">
             <div class="home-grid" aria-label="功能入口">
               <button class="feature-card" data-go="library" type="button">输入</button>
-              <button class="feature-card" data-go="review" type="button">复现</button>
+              <button class="feature-card" data-go="library" type="button">词库</button>
             </div>
-            <button class="library-entry" data-go="library" type="button">词库</button>
+            <button class="feature-card home-review-entry" data-go="review" type="button">复现</button>
           </main>
         </div>
       `;
