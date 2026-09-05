@@ -365,8 +365,9 @@
 
     .main-home {
       flex: 1;
-      display: grid;
-      place-items: center;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
       padding: 4px 0 34px;
     }
 
@@ -375,6 +376,67 @@
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 22px;
+      align-self: center;
+    }
+
+    .library-entry {
+      width: min(100%, 620px);
+      min-height: 88px;
+      border-radius: 24px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.68), rgba(255, 255, 255, 0.42)),
+        linear-gradient(135deg, rgba(88, 122, 113, 0.08), rgba(255, 255, 255, 0) 48%),
+        rgba(255, 255, 255, 0.56);
+      border: 1px solid rgba(255, 255, 255, 0.36);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.6),
+        0 20px 46px rgba(57, 79, 57, 0.1);
+      backdrop-filter: blur(16px) saturate(1.08);
+      -webkit-backdrop-filter: blur(16px) saturate(1.08);
+      display: grid;
+      place-items: center;
+      font-size: 24px;
+      font-weight: 650;
+      letter-spacing: -0.02em;
+      align-self: center;
+    }
+
+    .pager-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .pager-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pager-btn {
+      min-height: 38px;
+      padding: 0 12px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.68);
+      border-color: rgba(111, 132, 111, 0.16);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .pager-btn:hover {
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    .pager-info {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .pager-btn:disabled {
+      opacity: 0.45;
+      box-shadow: none;
     }
 
     .feature-card {
@@ -511,10 +573,15 @@
       flex-wrap: wrap;
     }
 
-    .list-shell {
+    .search-results-shell {
       flex: 1;
       min-height: 0;
-      overflow: auto;
+      display: grid;
+      gap: 12px;
+    }
+
+    .search-results-panel {
+      min-height: 180px;
       border-radius: 22px;
       border: 1px solid rgba(255, 255, 255, 0.3);
       background:
@@ -525,55 +592,60 @@
         0 18px 42px rgba(57, 79, 57, 0.08);
       backdrop-filter: blur(16px) saturate(1.1);
       -webkit-backdrop-filter: blur(16px) saturate(1.1);
+      overflow: hidden;
+    }
+
+    .search-results-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 18px 12px;
+      border-bottom: 1px solid rgba(111, 132, 111, 0.12);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .search-results-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      max-height: min(48vh, 420px);
+      overflow: auto;
       scrollbar-width: thin;
       scrollbar-color: rgba(88, 122, 113, 0.34) rgba(255, 255, 255, 0.22);
     }
 
-    .list-shell::-webkit-scrollbar {
+    .search-results-list::-webkit-scrollbar {
       width: 10px;
     }
 
-    .list-shell::-webkit-scrollbar-track {
+    .search-results-list::-webkit-scrollbar-track {
       background: rgba(255, 255, 255, 0.2);
     }
 
-    .list-shell::-webkit-scrollbar-thumb {
+    .search-results-list::-webkit-scrollbar-thumb {
       background: rgba(88, 122, 113, 0.28);
       border: 2px solid rgba(255, 255, 255, 0.22);
       border-radius: 999px;
     }
 
-    .word-list {
-      margin: 0;
-      padding: 0;
-      list-style: none;
-    }
-
-    .word-row {
+    .search-result-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      padding: 16px 18px;
+      padding: 15px 18px;
       border-bottom: 1px solid rgba(111, 132, 111, 0.12);
-      transition:
-        background-color 180ms var(--ease-out),
-        transform 180ms var(--ease-out),
-        box-shadow 180ms var(--ease-out);
-      animation: row-in 320ms var(--ease-out) both;
+      animation: row-in 260ms var(--ease-out) both;
       animation-delay: var(--row-delay, 0ms);
     }
 
-    .word-row:hover {
-      background: rgba(88, 122, 113, 0.06);
-      transform: translateX(2px);
-    }
-
-    .word-row:last-child {
+    .search-result-row:last-child {
       border-bottom: 0;
     }
 
-    .word-text {
+    .search-result-word {
       min-width: 0;
       word-break: break-word;
       line-height: 1.5;
@@ -952,6 +1024,7 @@
       pageMessage: '',
       pageMessageType: 'info',
       search: '',
+      libraryPage: 0,
       reviewSession: null,
       showClearModal: false,
       importing: false
@@ -1104,6 +1177,7 @@
       state.view = 'auth';
       state.authMode = 'login';
       state.authMessage = '';
+      state.libraryPage = 0;
       state.pageMessage = '';
       saveState();
       render();
@@ -1130,6 +1204,7 @@
       state.data.currentUser = name;
       state.view = 'home';
       state.authMessage = '';
+      state.libraryPage = 0;
       state.pageMessage = '';
       saveState();
       render();
@@ -1153,6 +1228,7 @@
       state.data.currentUser = name;
       state.view = 'home';
       state.authMessage = '';
+      state.libraryPage = 0;
       state.pageMessage = '';
       saveState();
       render();
@@ -1322,6 +1398,52 @@
       render();
     }
 
+    function buildLibraryEntries(words, query) {
+      return words
+        .map((word, index) => ({ word, index }))
+        .filter(item => !query || item.word.toLowerCase().includes(query));
+    }
+
+    function paginateEntries(entries, page, pageSize) {
+      const totalPages = Math.max(1, Math.ceil(entries.length / pageSize));
+      const safePage = Math.min(Math.max(0, page), totalPages - 1);
+      const start = safePage * pageSize;
+      return {
+        totalPages,
+        page: safePage,
+        items: entries.slice(start, start + pageSize),
+        start,
+        end: Math.min(start + pageSize, entries.length)
+      };
+    }
+
+    function renderLibraryRows(items, options = {}) {
+      const { showIndex = true, showDelete = false, compact = false } = options;
+      return items.map((item, filteredIndex) => `
+        <li class="${compact ? 'home-library-item' : 'search-result-row'}" style="--row-delay:${filteredIndex * 18}ms;">
+          <div class="${compact ? 'home-library-item-word' : 'search-result-word'}">${escapeHtml(item.word)}</div>
+          ${showIndex && !compact ? `<button class="ghost-btn" type="button" data-delete-index="${item.index}">删除</button>` : ''}
+          ${showIndex && compact ? `<div class="home-library-item-index">#${item.index + 1}</div>` : ''}
+          ${showDelete && compact ? `<button class="ghost-btn" type="button" data-delete-index="${item.index}">删除</button>` : ''}
+        </li>
+      `).join('');
+    }
+
+    function renderPagerBar(page, totalPages, countText, scope) {
+      const prevDisabled = page <= 0;
+      const nextDisabled = page >= totalPages - 1;
+      return `
+        <div class="pager-bar">
+          <div class="pager-info">${escapeHtml(countText)}</div>
+          <div class="pager-group">
+            <button class="pager-btn" type="button" data-library-page-nav="prev" data-library-page-scope="${scope}" ${prevDisabled ? 'disabled' : ''}>上一页</button>
+            <span class="pager-info">第 ${page + 1} / ${totalPages} 页</span>
+            <button class="pager-btn" type="button" data-library-page-nav="next" data-library-page-scope="${scope}" ${nextDisabled ? 'disabled' : ''}>下一页</button>
+          </div>
+        </div>
+      `;
+    }
+
     function renderAuth() {
       const isLogin = state.authMode === 'login';
       return `
@@ -1366,9 +1488,10 @@
           </header>
           <main class="main-home">
             <div class="home-grid" aria-label="功能入口">
-              <button class="feature-card" data-go="library" type="button">词库</button>
+              <button class="feature-card" data-go="library" type="button">输入</button>
               <button class="feature-card" data-go="review" type="button">复现</button>
             </div>
+            <button class="library-entry" data-go="library" type="button">词库</button>
           </main>
         </div>
       `;
@@ -1376,6 +1499,8 @@
 
     function renderLibrary() {
       const words = currentWords();
+      const entries = buildLibraryEntries(words, state.search.trim().toLowerCase());
+      const pageData = paginateEntries(entries, state.libraryPage, 20);
 
       return `
         <div class="page">
@@ -1417,47 +1542,52 @@
               </div>
             </div>
 
-            <div class="list-shell" id="word-list-shell">
-              ${renderLibraryList(words)}
-            </div>
-
-            <div class="footer-bar">
-              <button class="footer-action" id="clear-btn" type="button">清空词库</button>
+            <div class="search-results-shell" id="word-results-shell">
+              ${renderLibraryResults(entries, pageData)}
             </div>
           </section>
         </div>
       `;
     }
 
-    function renderLibraryList(words) {
-      const query = state.search.trim().toLowerCase();
-      const filtered = words
-        .map((word, index) => ({ word, index }))
-        .filter(item => item.word.toLowerCase().includes(query));
+    function renderLibraryResults(entries, pageData) {
+      const { page, totalPages, items, start, end } = pageData;
+      if (!entries.length) {
+        return `
+          <div class="search-results-panel">
+            <div class="empty-state">词库空空的，先放几个单词进去吧~</div>
+          </div>
+        `;
+      }
 
-      const emptyText = words.length === 0
-        ? '词库空空的，先放几个单词进去吧~'
-        : '没有找到符合的单词哦~';
-
-      return filtered.length
-        ? `<ul class="word-list">${filtered.map((item, filteredIndex) => `
-            <li class="word-row" style="--row-delay:${filteredIndex * 22}ms;">
-              <div class="word-text">${escapeHtml(item.word)}</div>
-              <button class="ghost-btn" type="button" data-delete-index="${item.index}">删除</button>
-            </li>
-          `).join('')}</ul>`
-        : `<div class="empty-state">${escapeHtml(emptyText)}</div>`;
+      const totalText = `共 ${entries.length} 个单词`;
+      return `
+        <div class="search-results-panel">
+          <div class="search-results-head">
+            <div>${escapeHtml(totalText)}</div>
+            <div>第 ${page + 1} / ${totalPages} 页 · ${start + 1}-${Math.max(start + items.length, 0)}</div>
+          </div>
+          ${items.length
+            ? `
+              <ul class="search-results-list">
+                ${renderLibraryRows(items, { showDelete: true })}
+              </ul>
+              <div style="padding: 12px 18px 18px;">
+                ${renderPagerBar(page, totalPages, `当前页显示 ${start + 1}-${end} 条`, 'library')}
+              </div>
+            `
+            : `<div class="empty-state">没有找到符合的单词哦~</div>`}
+        </div>
+      `;
     }
 
     function updateLibraryList() {
-      const shell = document.getElementById('word-list-shell');
+      const shell = document.getElementById('word-results-shell');
       if (!shell) return;
-      shell.innerHTML = renderLibraryList(currentWords());
-      shell.querySelectorAll('[data-delete-index]').forEach(button => {
-        button.addEventListener('click', () => {
-          deleteWord(Number(button.dataset.deleteIndex));
-        });
-      });
+      const words = currentWords();
+      const entries = buildLibraryEntries(words, state.search.trim().toLowerCase());
+      const pageData = paginateEntries(entries, state.libraryPage, 20);
+      shell.innerHTML = renderLibraryResults(entries, pageData);
     }
 
     function renderReview() {
@@ -1552,6 +1682,14 @@
       const logoutBtn = document.getElementById('logout-btn');
       if (logoutBtn) logoutBtn.addEventListener('click', logout);
 
+      app.querySelectorAll('[data-library-page-nav]').forEach(button => {
+        button.addEventListener('click', () => {
+          const direction = button.dataset.libraryPageNav === 'next' ? 1 : -1;
+          state.libraryPage = Math.max(0, state.libraryPage + direction);
+          render();
+        });
+      });
+
       if (state.view === 'auth') {
         document.querySelectorAll('[data-auth-mode]').forEach(button => {
           button.addEventListener('click', () => {
@@ -1587,13 +1725,9 @@
         const addForm = document.getElementById('add-form');
         const wordInput = document.getElementById('word-input');
         const searchInput = document.getElementById('search-input');
-        const listShell = document.getElementById('word-list-shell');
+        const resultsShell = document.getElementById('word-results-shell');
         const importBtn = document.getElementById('import-btn');
         const excelInput = document.getElementById('excel-input');
-        const clearBtn = document.getElementById('clear-btn');
-        const clearCancelBtn = document.getElementById('clear-cancel-btn');
-        const clearConfirmBtn = document.getElementById('clear-confirm-btn');
-        const clearBackdrop = document.getElementById('clear-modal-backdrop');
 
         if (state.search && searchInput) {
           searchInput.focus();
@@ -1611,6 +1745,7 @@
         if (searchInput) {
           searchInput.addEventListener('input', event => {
             state.search = event.target.value;
+            state.libraryPage = 0;
             updateLibraryList();
           });
         }
@@ -1626,22 +1761,14 @@
           });
         }
 
-        if (listShell) {
-          listShell.querySelectorAll('[data-delete-index]').forEach(button => {
-            button.addEventListener('click', () => {
-              deleteWord(Number(button.dataset.deleteIndex));
-            });
+        if (resultsShell) {
+          resultsShell.addEventListener('click', event => {
+            const target = event.target.closest('[data-delete-index]');
+            if (!target) return;
+            deleteWord(Number(target.dataset.deleteIndex));
           });
         }
 
-        if (clearBtn) clearBtn.addEventListener('click', openClearModal);
-        if (clearCancelBtn) clearCancelBtn.addEventListener('click', closeClearModal);
-        if (clearConfirmBtn) clearConfirmBtn.addEventListener('click', clearWords);
-        if (clearBackdrop) {
-          clearBackdrop.addEventListener('click', event => {
-            if (event.target === clearBackdrop) closeClearModal();
-          });
-        }
         return;
       }
 
