@@ -228,6 +228,8 @@
       box-shadow: var(--shadow-soft);
       backdrop-filter: blur(12px) saturate(1.08);
       -webkit-backdrop-filter: blur(12px) saturate(1.08);
+      flex: 0 0 auto;
+      white-space: nowrap;
     }
 
     .ghost-btn:hover {
@@ -383,7 +385,7 @@
 
     .home-review-entry {
       width: min(100%, 920px);
-      min-height: 138px;
+      min-height: 166px;
       border-radius: 24px;
       background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.74), rgba(255, 255, 255, 0.46)),
@@ -397,7 +399,7 @@
       -webkit-backdrop-filter: blur(18px) saturate(1.1);
       display: grid;
       place-items: center;
-      font-size: 24px;
+      font-size: 26px;
       font-weight: 650;
       letter-spacing: -0.02em;
     }
@@ -956,6 +958,33 @@
         gap: 14px;
       }
 
+      .topbar {
+        gap: 8px;
+      }
+
+      .topbar-left,
+      .topbar-right {
+        gap: 8px;
+      }
+
+      .user-pill,
+      .count-pill,
+      .ghost-btn {
+        min-height: 40px;
+      }
+
+      .user-pill,
+      .count-pill {
+        padding: 0 10px;
+        font-size: 12px;
+      }
+
+      .ghost-btn {
+        padding: 0 10px;
+        font-size: 12px;
+        letter-spacing: -0.01em;
+      }
+
       .home-grid {
         width: 100%;
         gap: 12px;
@@ -1498,10 +1527,9 @@
           </header>
           <main class="main-home">
             <div class="home-grid" aria-label="功能入口">
-              <button class="feature-card" data-go="library" type="button">输入</button>
               <button class="feature-card" data-go="library" type="button">词库</button>
+              <button class="feature-card" data-go="review" type="button">复现</button>
             </div>
-            <button class="feature-card home-review-entry" data-go="review" type="button">复现</button>
           </main>
         </div>
       `;
